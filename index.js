@@ -20,16 +20,22 @@ app.use(cors({
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const departmentRoutes = require('./routes/departments');
+const itemsRoutes = require('./routes/items'); // Import items routes
+const customersRoutes = require('./routes/customers'); // Import items routes
 const authMiddleware = require('./middleware/authMiddleware');
-// ... import other routes as needed
+const invoiceRoutes = require('./routes/invoices');
+const transactionRoutes = require('./routes/transactions');
+
 
 // Setup routes using asyncHandler if necessary
 app.use('/api', authRoutes);             // e.g., login route
 app.use('/api/users', userRoutes);
-app.use('/api/departments', authMiddleware,departmentRoutes);
+app.use('/api/departments', authMiddleware, departmentRoutes);
 app.use('/api/categories', authMiddleware, categoryRoutes);
-
-
+app.use('/api/items', authMiddleware, itemsRoutes); // Add this line
+app.use('/api/customers', authMiddleware, customersRoutes); // Add this line
+app.use('/api/invoices', invoiceRoutes);
+app.use('/api/transactions', authMiddleware, transactionRoutes);
 
 // Global error-handling middleware
 app.use((err, req, res, next) => {

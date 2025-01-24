@@ -1,3 +1,5 @@
+// backend/models/Transaction.js
+
 module.exports = (sequelize, DataTypes) => {
   const Transaction = sequelize.define('Transaction', {
     id: {
@@ -15,6 +17,15 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true,
       field: 'invoice_id'
     },
+    /**
+     * ADD THIS FIELD so that 'item_id' actually exists in the Transactions table.
+     * Make it nullable if some transactions do not belong to any item.
+     */
+    item_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: 'item_id'
+    },
     referenceId: {
       type: DataTypes.STRING,
       allowNull: true
@@ -25,7 +36,7 @@ module.exports = (sequelize, DataTypes) => {
       field: 'transactionDate'
     },
     transactionType: {
-      type: DataTypes.ENUM('Credit', 'Debit'),
+      type: DataTypes.ENUM('Credit', 'Debit', 'Refund'),
       allowNull: false,
       field: 'transaction_type'
     },
@@ -57,22 +68,31 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: true
     }
- 
   }, {
     tableName: 'Transactions',
     timestamps: true
   });
 
+  // Define Associations
   Transaction.associate = models => {
     Transaction.belongsTo(models.Customer, {
       foreignKey: 'customer_id',
+      as: 'customer',
       onDelete: 'CASCADE'
     });
     Transaction.belongsTo(models.Invoice, {
       foreignKey: 'invoice_id',
+      as: 'invoice',
       onDelete: 'SET NULL'
     });
-    // Additional associations if needed...
+    /**
+     * ADD THIS BELONGS-TO to match Item.hasMany(... { foreignKey: 'item_id' })
+     */
+    Transaction.belongsTo(models.Item, {
+      foreignKey: 'item_id',
+      as: 'item',
+      onDelete: 'CASCADE'
+    });
   };
 
   return Transaction;

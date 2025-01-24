@@ -21,19 +21,18 @@ const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const departmentRoutes = require('./routes/departments');
 const itemsRoutes = require('./routes/items'); // Import items routes
-const customersRoutes = require('./routes/customers'); // Import items routes
+const customersRoutes = require('./routes/customers'); // Import customers routes
 const authMiddleware = require('./middleware/authMiddleware');
 const invoiceRoutes = require('./routes/invoices');
 const transactionRoutes = require('./routes/transactions');
-
 
 // Setup routes using asyncHandler if necessary
 app.use('/api', authRoutes);             // e.g., login route
 app.use('/api/users', userRoutes);
 app.use('/api/departments', authMiddleware, departmentRoutes);
 app.use('/api/categories', authMiddleware, categoryRoutes);
-app.use('/api/items', authMiddleware, itemsRoutes); // Add this line
-app.use('/api/customers', authMiddleware, customersRoutes); // Add this line
+app.use('/api/items', authMiddleware, itemsRoutes);
+app.use('/api/customers', authMiddleware, customersRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/transactions', authMiddleware, transactionRoutes);
 
@@ -60,7 +59,6 @@ app.use((err, req, res, next) => {
   // Default to 500 Internal Server Error
   res.status(err.status || 500).json({
     message: err.message || 'Internal Server Error',
-    // Optionally include stack traces in development:
     // stack: process.env.NODE_ENV === 'development' ? err.stack : {}
   });
 });
@@ -69,7 +67,9 @@ app.use((err, req, res, next) => {
 sequelize.authenticate()
   .then(() => {
     console.log('Database connected...');
-    return sequelize.sync();
+    // ***********  CRITICAL CHANGE HERE  ***********
+    // Use { alter: true } so Sequelize adds missing columns like 'item_id'.
+    return sequelize.sync({ alter: true });
   })
   .then(() => {
     console.log('All models synchronized successfully.');

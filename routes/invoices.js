@@ -24,5 +24,8 @@ router.delete('/:id', asyncHandler(invoiceController.deleteInvoice));
 // ... other invoice routes if needed ...
 router.put('/:id', authMiddleware, asyncHandler(invoiceController.updateInvoice));
 
+// **NEW ROUTE**: GET endpoint to get the total number of invoices for a specific customer by customer ID
+// Example: GET /api/invoices/total/8
+router.get('/total/:customerId', asyncHandler(invoiceController.getTotalInvoicesByUser));
 
 module.exports = router;

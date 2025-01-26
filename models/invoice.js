@@ -1,5 +1,3 @@
-// models/invoice.js
-
 module.exports = (sequelize, DataTypes) => {
   const Invoice = sequelize.define('Invoice', {
     invoiceNumber: {
@@ -47,12 +45,16 @@ module.exports = (sequelize, DataTypes) => {
 
     // NEW FIELDS for Payment Method & Received Amount:
     paymentMethod: {
-      type: DataTypes.STRING, // e.g. 'Cash', 'Bank', 'Cheque', 'UPI', 'Net Banking'
+      type: DataTypes.STRING, // e.g., 'Cash', 'Bank', 'Cheque', 'UPI', 'Net Banking'
       allowNull: true,
     },
     receivedAmount: {
       type: DataTypes.FLOAT,
       allowNull: false,
+      defaultValue: 0,
+    },
+    invoicePendingAmount: { // NEW FIELD for pending amount
+      type: DataTypes.FLOAT,
       defaultValue: 0,
     },
 
@@ -62,8 +64,12 @@ module.exports = (sequelize, DataTypes) => {
 
   // Associations
   Invoice.associate = models => {
+    // Existing Associations
     Invoice.belongsTo(models.Customer, { foreignKey: 'customer_id', onDelete: 'SET NULL' });
     Invoice.hasMany(models.InvoiceItem, { foreignKey: 'invoice_id', onDelete: 'CASCADE' });
+
+    // **NEW ASSOCIATION**: Invoice has one Transaction
+    Invoice.hasOne(models.Transaction, { foreignKey: 'invoice_id', onDelete: 'CASCADE' });
   };
 
   return Invoice;

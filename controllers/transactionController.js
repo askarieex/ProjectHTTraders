@@ -10,29 +10,40 @@ const { Op } = require('sequelize');
  * @param {Number} amount - Transaction amount
  * @param {Boolean} increment - Whether to increment (true) or decrement (false) the balance
  * @param {Object} transaction - Sequelize transaction instance
+ * @param {Object} options - Additional options like balanceEffect override
  */
 const adjustCustomerBalance = async (
     customer,
     transactionType,
     amount,
     increment = true,
-    transaction = null
+    transaction = null,
+    options = {}
 ) => {
     // Define how each transaction type affects the balance
-    // - 'Credit' decreases the balance (customer pays)
-    // - 'Debit' and 'Refund' increase the balance (money owed to customer)
+    // - 'Credit' decreases the balance (customer pays us)
+    // - 'Debit' increases the balance (we owe customer)
+    // - 'Refund' decreases the balance (we pay customer back)
     let balanceChange = 0;
 
-    switch (transactionType.toLowerCase()) {
-        case 'credit':
-            balanceChange = -amount;
-            break;
-        case 'debit':
-        case 'refund':
-            balanceChange = amount;
-            break;
-        default:
-            throw new Error(`Unknown transaction type: ${transactionType}`);
+    // Check if balanceEffect is explicitly specified in options
+    if (options.balanceEffect) {
+        balanceChange = options.balanceEffect === "decrease" ? -amount : amount;
+    } else {
+        // Default behavior
+        switch (transactionType.toLowerCase()) {
+            case 'credit':
+                balanceChange = -amount; // Decrease balance (customer pays us)
+                break;
+            case 'debit':
+                balanceChange = amount; // Increase balance (we owe customer)
+                break;
+            case 'refund':
+                balanceChange = -amount; // Decrease balance (we pay customer back)
+                break;
+            default:
+                throw new Error(`Unknown transaction type: ${transactionType}`);
+        }
     }
 
     if (!increment) {
@@ -106,7 +117,8 @@ exports.createTransaction = async (req, res) => {
             transactionStatus,
             description,
             gstDetails,
-            department
+            department,
+            balanceEffect // Optional parameter to override balance calculation
         } = req.body;
 
         // Validate required fields
@@ -178,7 +190,8 @@ exports.createTransaction = async (req, res) => {
             transactionType,
             amount,
             true,
-            sequelizeTxn
+            sequelizeTxn,
+            { balanceEffect }
         );
 
         // **NEW CODE: Update invoicePendingAmount if invoice_id is provided**

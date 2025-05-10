@@ -1,7 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const { sequelize } = require('./models');
+const path = require('path');
+const { sequelize, Category } = require('./models');
 const asyncHandler = require('./utils/asyncHandler');
 const categoryRoutes = require('./routes/categories');  // Import categories route
 
@@ -16,25 +17,34 @@ app.use(cors({
   credentials: true,
 }));
 
+// Serve static files from the uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Import routes
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const departmentRoutes = require('./routes/departments');
 const itemsRoutes = require('./routes/items'); // Import items routes
 const customersRoutes = require('./routes/customers'); // Import customers routes
-const authMiddleware = require('./middleware/authMiddleware');
+const { authenticateUser } = require('./middleware/authMiddleware');
 const invoiceRoutes = require('./routes/invoices');
 const transactionRoutes = require('./routes/transactions');
+const cutRoutes = require('./routes/cut'); // Import new cut routes
+const unitsRoutes = require('./routes/units'); // Import units routes
+const settingsRoutes = require('./routes/settings'); // Import settings routes
 
 // Setup routes using asyncHandler if necessary
-app.use('/api', authRoutes);             // e.g., login route
+app.use('/api/auth', authRoutes);             // e.g., login route
 app.use('/api/users', userRoutes);
-app.use('/api/departments', authMiddleware, departmentRoutes);
-app.use('/api/categories', authMiddleware, categoryRoutes);
-app.use('/api/items', authMiddleware, itemsRoutes);
-app.use('/api/customers', authMiddleware, customersRoutes);
+app.use('/api/departments', authenticateUser, departmentRoutes);
+app.use('/api/categories', authenticateUser, categoryRoutes);
+app.use('/api/items', authenticateUser, itemsRoutes);
+app.use('/api/customers', authenticateUser, customersRoutes);
 app.use('/api/invoices', invoiceRoutes);
-app.use('/api/transactions', authMiddleware, transactionRoutes);
+app.use('/api/transactions', authenticateUser, transactionRoutes);
+app.use('/api/cut', authenticateUser, cutRoutes); // Register new cut routes
+app.use('/api/units', unitsRoutes); // Register units routes
+app.use('/api/settings', settingsRoutes); // Register settings routes
 
 // Global error-handling middleware
 app.use((err, req, res, next) => {
@@ -63,6 +73,26 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Seed categories to make sure they exist
+const seedCategories = async () => {
+  try {
+    const categories = [
+      { id: 1, name: 'Timber/Wood' },
+      { id: 2, name: 'Construction Materials' },
+      { id: 3, name: 'Hardware' },
+      { id: 4, name: 'Packaging' }
+    ];
+
+    for (const category of categories) {
+      // Use upsert to create or update (if already exists)
+      await Category.upsert(category);
+    }
+    console.log('Categories seeded successfully');
+  } catch (error) {
+    console.error('Error seeding categories:', error);
+  }
+};
+
 // Connect to DB, sync models, and start server
 sequelize.authenticate()
   .then(() => {
@@ -73,8 +103,11 @@ sequelize.authenticate()
   })
   .then(() => {
     console.log('All models synchronized successfully.');
-    app.listen(port, () => {
+    app.listen(port, async () => {
       console.log(`Server running on port ${port}`);
+
+      // Seed categories
+      await seedCategories();
     });
   })
   .catch(err => console.error('Error connecting to the database or syncing models:', err));

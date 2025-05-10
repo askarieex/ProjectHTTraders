@@ -1,13 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const asyncHandler = require('../utils/asyncHandler');
 const categoryController = require('../controllers/categoryController');
+const itemController = require('../controllers/itemController');
+const asyncHandler = require('../utils/asyncHandler');
+const { authenticateUser } = require('../middleware/authMiddleware');
 
-// Define category CRUD routes wrapped with asyncHandler for error catching
-router.get('/', asyncHandler(categoryController.getAll));
-router.post('/', asyncHandler(categoryController.create));
-router.get('/:id', asyncHandler(categoryController.getById));
-router.put('/:id', asyncHandler(categoryController.update));
-router.delete('/:id', asyncHandler(categoryController.remove));
+// Apply authentication middleware to all routes
+router.use(authenticateUser);
+
+// Routes for categories
+router.get('/', asyncHandler(categoryController.getAllCategories));
+router.post('/', asyncHandler(categoryController.createCategory));
+router.get('/:id', asyncHandler(categoryController.getCategoryById));
+router.put('/:id', asyncHandler(categoryController.updateCategory));
+router.delete('/:id', asyncHandler(categoryController.deleteCategory));
+
+// Add route for getting items by category ID
+router.get('/:categoryId/items', asyncHandler(itemController.getItemsByCategory));
 
 module.exports = router;

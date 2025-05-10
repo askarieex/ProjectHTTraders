@@ -31,6 +31,40 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         min: 0
       }
+    },
+    reorder_level: { // New Field for reorder threshold
+      type: DataTypes.FLOAT,
+      allowNull: false,
+      defaultValue: 10,
+      validate: {
+        min: 0
+      }
+    },
+    length: { // Store length separately for easier manipulation
+      type: DataTypes.FLOAT,
+      allowNull: true
+    },
+    breadth: { // Store breadth separately
+      type: DataTypes.FLOAT,
+      allowNull: true
+    },
+    height: { // Store height separately
+      type: DataTypes.FLOAT,
+      allowNull: true
+    },
+    dim_unit: { // Dimension unit (cm, in, ft, m)
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: 'ft'
+    },
+    pieces: { // Number of pieces
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 1
+    },
+    weight_per_piece: { // Weight per piece for weighted items
+      type: DataTypes.FLOAT,
+      allowNull: true
     }
   }, {
     timestamps: false,

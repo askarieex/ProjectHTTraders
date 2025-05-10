@@ -36,7 +36,7 @@ module.exports = (sequelize, DataTypes) => {
       field: 'transactionDate'
     },
     transactionType: {
-      type: DataTypes.ENUM('Credit', 'Debit', 'Refund'),
+      type: DataTypes.ENUM('Credit', 'Debit', 'Refund', 'PURCHASE', 'SALE', 'RETURN', 'ADJUSTMENT', 'CUT'),
       allowNull: false,
       field: 'transaction_type'
     },
@@ -67,6 +67,36 @@ module.exports = (sequelize, DataTypes) => {
     department: {
       type: DataTypes.STRING,
       allowNull: true
+    },
+    quantity: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+      validate: {
+        min: 0
+      }
+    },
+    unit: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    details: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      get() {
+        const value = this.getDataValue('details');
+        return value ? JSON.parse(value) : null;
+      },
+      set(value) {
+        this.setDataValue('details', value ? JSON.stringify(value) : null);
+      }
+    },
+    notes: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    transaction_date: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW
     }
   }, {
     tableName: 'Transactions',

@@ -3,10 +3,10 @@ const express = require('express');
 const router = express.Router();
 const customerController = require('../controllers/customerController');
 const asyncHandler = require('../utils/asyncHandler');
-const authMiddleware = require('../middleware/authMiddleware');
+const { authenticateUser } = require('../middleware/authMiddleware');
 
-// Apply authentication middleware to all customer routes
-router.use(authMiddleware);
+// Apply authentication middleware to all routes
+router.use(authenticateUser);
 
 // Existing CRUD routes for Customers
 router.get('/', asyncHandler(customerController.getAllCustomers));
